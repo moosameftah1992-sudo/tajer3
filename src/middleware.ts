@@ -18,6 +18,7 @@ function platformHosts() {
 }
 
 function subdomainSlug(host: string) {
+  if (host.endsWith(".vercel.app")) return null;
   const suffixes = [".localhost", ".tajer.com", ".tajer.local"];
   for (const suffix of suffixes) {
     if (!host.endsWith(suffix)) continue;
@@ -45,23 +46,33 @@ async function lookupHost(host: string) {
   }
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const host = hostname(request);
   const headers = new Headers(request.headers);
   headers.set("x-tajer-host", host);
 
-  if (host === "admin.tajer.com" || host === "platform.tajer.com" || host === "admin.localhost") {
-    const dest = url.clone();
-    dest.pathname = url.pathname === "/" ? "/platform" : `/platform${url.pathname}`;
-    headers.set("x-pathname", dest.pathname);
-    return NextResponse.rewrite(dest, { request: { headers } });
+  if (
+    host.endsWith(".vercel.app") ||
+    platformHosts().has(host) ||
+    host === "admin.tajer.com" ||
+    host === "platform.tajer.com" ||
+    host === "admin.localhost"
+  ) {
+    if (host === "admin.tajer.com" || host === "platform.tajer.com" || host === "admin.localhost") {
+      const dest = url.clone();
+      dest.pathname = url.pathname === "/" ? "/platform" : `/platform${url.pathname}`;
+      headers.set("x-pathname", dest.pathname);
+      return NextResponse.rewrite(dest, { request: { headers } });
+    }
+    return NextResponse.next({ request: { headers } });
   }
 
   const forced = request.headers.get("x-tajer-tenant");
   let slug = forced && !forced.includes(".") ? forced : subdomainSlug(host);
   let vanity = Boolean(slug);
-  if (!slug && host && !platformHosts().has(host)) {
+
+  if (!slug && host) {
     slug = await lookupHost(host);
     vanity = Boolean(slug);
   }
