@@ -9,10 +9,13 @@ import { tx } from "@/lib/i18n";
 import { getLocale } from "@/lib/locale";
 import { getGeo, getSettings } from "@/lib/service";
 import { THEMES } from "@/lib/themes";
+import { ensureBootstrapped } from "@/lib/bootstrap";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  await ensureBootstrapped().catch(() => {});
+
   const locale = await getLocale();
 
   let settings = { trialDays: 30, monthlyPrice: "49", yearlyPrice: "470", billingCurrency: "USD" };
