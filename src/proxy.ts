@@ -42,12 +42,10 @@ export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const host = hostname(request);
 
-  // إذا كان على نطاق المنصة أو Vercel، مرر الطلب بشكل طبيعي ليعرض page.tsx أو المجلدات الداخلية
   if (isPlatformHost(host)) {
     return NextResponse.next();
   }
 
-  // معالجة النطاقات الخاصة والمتاجر
   let slug = await lookupHost(host);
   if (slug) {
     const dest = url.clone();
@@ -59,5 +57,14 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|api/|.*\\..*).*)"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
 };
