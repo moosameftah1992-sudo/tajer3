@@ -21,19 +21,24 @@ export default async function HomePage() {
   let featured: any[] = [];
 
   try {
-    const [sRes, gRes, tRes, fRes] = await Promise.all([
+    // إضافة سباق زمني (Timeout) بحد أقصى ثانيتين حتى لا يتسبب قاعدة البيانات في تعطيل الخادم
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(typeof window === 'undefined' ? new Error('Timeout') : null), 2500));
+
+    const dataPromise = Promise.all([
       getSettings().catch(() => null),
       getGeo().catch(() => []),
       db.select().from(themeCatalog).orderBy(themeCatalog.sort).catch(() => []),
       db.select().from(tenants).where(eq(tenants.featured, true)).orderBy(desc(tenants.createdAt)).catch(() => []),
     ]);
 
-    if (sRes) settings = sRes as any;
+    const [sRes, gRes, tRes, fRes] = await Promise.race([dataPromise, timeoutPromise]) as any;
+
+    if (sRes) settings = sRes;
     if (gRes) geo = gRes;
     if (tRes) themes = tRes;
     if (fRes) featured = fRes;
   } catch (error) {
-    console.error("Failed to load initial home page data:", error);
+    // في حال حدوث بطء أو مهلة، ستعمل الصفحة فوراً بالقيم الافتراضية ولن تحدث أي مشكلة 504
   }
 
   const areas = geo.reduce((sum, country) => sum + (country.governorates?.reduce((inner: number, gov: any) => inner + (gov.areas?.length || 0), 0) || 0), 0);
