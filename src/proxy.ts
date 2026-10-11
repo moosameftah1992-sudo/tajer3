@@ -10,11 +10,6 @@ function hostname(request: NextRequest) {
 }
 
 function isPlatformHost(host: string) {
-  const extra = (process.env.PLATFORM_HOSTS || "")
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
-
   if (
     host.endsWith(".vercel.app") ||
     host.endsWith(".localhost") ||
@@ -24,21 +19,7 @@ function isPlatformHost(host: string) {
   ) {
     return true;
   }
-
-  const allowed = new Set(["tajer.com", "www.tajer.com", "tajer.local", ...extra]);
-  return allowed.has(host);
-}
-
-function subdomainSlug(host: string) {
-  const suffixes = [".localhost", ".tajer.com", ".tajer.local"];
-  for (const suffix of suffixes) {
-    if (!host.endsWith(suffix)) continue;
-    const sub = host.slice(0, -suffix.length);
-    if (!sub || sub.includes(".") || RESERVED.has(sub)) return null;
-    if (!/^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])?$/.test(sub)) return null;
-    return sub;
-  }
-  return null;
+  return false;
 }
 
 async function lookupHost(host: string) {
@@ -60,57 +41,23 @@ async function lookupHost(host: string) {
 export async function proxy(request: NextRequest) {
   const url = request.nextUrl;
   const host = hostname(request);
-  const headers = new Headers(request.headers);
-  headers.set("x-tajer-host", host);
 
-  // إذا كان الطلب على الجذر للمنصة أو نطاق Vercel الرئيسي، اعرض الصفحة الرئيسية مباشرة
-  if (url.pathname === "/" && isPlatformHost(host) && !host.startsWith("admin.") && !host.startsWith("platform.")) {
-    headers.set("x-pathname", url.pathname);
-    return NextResponse.next({ request: { headers } });
+  // إذا كان على نطاق المنصة أو Vercel، مرر الطلب بشكل طبيعي ليعرض page.tsx أو المجلدات الداخلية
+  if (isPlatformHost(host)) {
+    return NextResponse.next();
   }
 
-  if (host === "admin.tajer.com" || host === "platform.tajer.com" || host === "admin.localhost") {
-    const dest = url.clone();
-    dest.pathname = url.pathname === "/" ? "/platform" : `/platform${url.pathname}`;
-    headers.set("x-pathname", dest.pathname);
-    return NextResponse.rewrite(dest, { request: { headers } });
-  }
-
-  if (
-    url.pathname.startsWith("/s/") ||
-    url.pathname.startsWith("/platform") ||
-    url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/_next") ||
-    url.pathname.startsWith("/login") ||
-    url.pathname.startsWith("/register")
-  ) {
-    headers.set("x-pathname", url.pathname);
-    return NextResponse.next({ request: { headers } });
-  }
-
-  const forced = request.headers.get("x-tajer-tenant");
-  let slug = forced && !forced.includes(".") ? forced : subdomainSlug(host);
-  let vanity = Boolean(slug);
-  if (!slug && host && !isPlatformHost(host)) {
-    slug = await lookupHost(host);
-    vanity = Boolean(slug);
-  }
-
+  // معالجة النطاقات الخاصة والمتاجر
+  let slug = await lookupHost(host);
   if (slug) {
     const dest = url.clone();
     dest.pathname = `/s/${slug}${url.pathname === "/" ? "" : url.pathname}`;
-    headers.set("x-pathname", dest.pathname);
-    headers.set("x-tajer-slug", slug);
-    headers.set("x-tajer-vanity", "1");
-    return NextResponse.rewrite(dest, { request: { headers } });
+    return NextResponse.rewrite(dest);
   }
 
-  headers.set("x-pathname", url.pathname);
-  headers.set("x-tajer-slug", slug || "");
-  headers.set("x-tajer-vanity", vanity ? "1" : "0");
-  return NextResponse.next({ request: { headers } });
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ["/((?!_next/static|_next/image|api/|.*\\..*).*)"],
 };
