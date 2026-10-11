@@ -14,13 +14,19 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const locale = await getLocale();
+  
+  // حماية الاستعلامات لتجنب انهيار الصفحة إذا كانت الجداول فارغة في قاعدة البيانات
   const [settings, geo, themes, featured] = await Promise.all([
-    getSettings(),
-    getGeo(),
-    db.select().from(themeCatalog).orderBy(themeCatalog.sort),
-    db.select().from(tenants).where(eq(tenants.featured, true)).orderBy(desc(tenants.createdAt)),
+    getSettings().catch(() => ({ trialDays: 30, monthlyPrice: "0", yearlyPrice: "0", billingCurrency: "BHD" })),
+    getGeo().catch(() => []),
+    db.select().from(themeCatalog).orderBy(themeCatalog.sort).catch(() => []),
+    db.select().from(tenants).where(eq(tenants.featured, true)).orderBy(desc(tenants.createdAt)).catch(() => []),
   ]);
-  const areas = geo.reduce((sum, country) => sum + country.governorates.reduce((inner, gov) => inner + gov.areas.length, 0), 0);
+
+  const areas = Array.isArray(geo) 
+    ? geo.reduce((sum, country) => sum + (country?.governorates?.reduce((inner, gov) => inner + (gov?.areas?.length || 0), 0) || 0), 0) 
+    : 0;
+
   return (
     <main className="landing">
       <header className="nav">
@@ -81,7 +87,7 @@ export default async function HomePage() {
           {[
             ["Independent links", "روابط مستقلة", "Subdomains, custom domains, and a verified host router. No shared storefront URL.", "نطاقات فرعية ونطاقات خاصة وموجّه مضيف موثّق. لا رابط مشترك."],
             ["Trial lockout", "قفل التجربة", "Thirty days, then the storefront shows maintenance and the desk opens only the renewal page.", "ثلاثون يوماً، ثم صيانة للواجهة وصفحة تجديد فقط للمكتب."],
-            ["Offer engine", "محرك العروض", "Store-wide percent, item sale prices, and coupons calculate together at checkout and POS.", "خصم شامل وسعر تخفيض وكوبونات تُحسب معاً في الدفع والصندوق."],
+            ["Offer engine", "محرك العروض", "Store-wide percent, item sale prices, and coupons calculate together at checkout and POS.", "خصم شامل وسعر تخفيض والكوبونات تُحسب معاً في الدفع والصندوق."],
             ["Geo directory", "دليل المناطق", "Countries, governorates, and areas drive shipping rates for every cart.", "الدول والمحافظات والمناطق تحدد أسعار الشحن لكل سلة."],
             ["Merchant gateways", "بوابات التاجر", "Cash, Benefit, cards, and PayPal settle with the merchant's own credentials.", "النقد وبنفت والبطاقات وباي بال تُسوّى ببيانات التاجر نفسه."],
             ["Logistics hub", "مركز الشحن", "Unlimited carriers, per-store activation, and signed status webhooks.", "شركات بلا حد، وتفعيل لكل متجر، وويب هوك موقّع للحالة."],
