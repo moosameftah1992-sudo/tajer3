@@ -1,5 +1,9 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool, neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
+
+// تهيئة الاتصال ليعمل بسلاسة على بيئة Serverless بدون تعليق TCP
+neonConfig.webSocketConnector = ws;
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -7,24 +11,5 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required");
 }
 
-const globalForDb = globalThis as typeof globalThis & {
-  __arenaNextJsPostgresqlPool?: Pool;
-};
-
-export const pool =
-  globalForDb.__arenaNextJsPostgresqlPool ??
-  new Pool({
-    connectionString: databaseUrl,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-    connectionTimeoutMillis: 5000, // إنهاء الاتصال فوراً إذا استغرق أكثر من 5 ثوانٍ لمنع الـ Timeout
-    idleTimeoutMillis: 30000,
-    max: 10,
-  });
-
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.__arenaNextJsPostgresqlPool = pool;
-}
-
+export const pool = new Pool({ connectionString: databaseUrl });
 export const db = drizzle(pool);
