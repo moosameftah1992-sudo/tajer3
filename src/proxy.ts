@@ -63,13 +63,8 @@ export async function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set("x-tajer-host", host);
 
-  // إذا كان الدخول من نطاق المنصة (مثل Vercel) أو نطاقات الإدارة
-  if (
-    isPlatformHost(host) &&
-    !host.startsWith("admin.") &&
-    !host.startsWith("platform.")
-  ) {
-    // إذا كان المسار هو الجذر، دعه يفتح صفحة المنصة الرئيسية (page.tsx أو /platform حسب رغبتك)
+  // إذا كان الطلب على الجذر للمنصة أو نطاق Vercel الرئيسي، اعرض الصفحة الرئيسية مباشرة
+  if (url.pathname === "/" && isPlatformHost(host) && !host.startsWith("admin.") && !host.startsWith("platform.")) {
     headers.set("x-pathname", url.pathname);
     return NextResponse.next({ request: { headers } });
   }
@@ -117,5 +112,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|api/|.*\\..*).*)"],
+  matcher: ["/:path*"],
 };
