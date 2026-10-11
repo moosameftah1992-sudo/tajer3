@@ -63,6 +63,17 @@ export async function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set("x-tajer-host", host);
 
+  // إذا كان الدخول من نطاق المنصة (مثل Vercel) أو نطاقات الإدارة
+  if (
+    isPlatformHost(host) &&
+    !host.startsWith("admin.") &&
+    !host.startsWith("platform.")
+  ) {
+    // إذا كان المسار هو الجذر، دعه يفتح صفحة المنصة الرئيسية (page.tsx أو /platform حسب رغبتك)
+    headers.set("x-pathname", url.pathname);
+    return NextResponse.next({ request: { headers } });
+  }
+
   if (host === "admin.tajer.com" || host === "platform.tajer.com" || host === "admin.localhost") {
     const dest = url.clone();
     dest.pathname = url.pathname === "/" ? "/platform" : `/platform${url.pathname}`;
@@ -70,12 +81,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(dest, { request: { headers } });
   }
 
-  // السماح بمرور المسارات الأساسية ومسارات المتاجر مباشرة دون تقاطع
   if (
     url.pathname.startsWith("/s/") ||
     url.pathname.startsWith("/platform") ||
     url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/_next")
+    url.pathname.startsWith("/_next") ||
+    url.pathname.startsWith("/login") ||
+    url.pathname.startsWith("/register")
   ) {
     headers.set("x-pathname", url.pathname);
     return NextResponse.next({ request: { headers } });
