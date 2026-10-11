@@ -70,6 +70,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(dest, { request: { headers } });
   }
 
+  // السماح بمرور المسارات الأساسية ومسارات المتاجر مباشرة دون تقاطع
+  if (
+    url.pathname.startsWith("/s/") ||
+    url.pathname.startsWith("/platform") ||
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/_next")
+  ) {
+    headers.set("x-pathname", url.pathname);
+    return NextResponse.next({ request: { headers } });
+  }
+
   const forced = request.headers.get("x-tajer-tenant");
   let slug = forced && !forced.includes(".") ? forced : subdomainSlug(host);
   let vanity = Boolean(slug);
@@ -78,7 +89,7 @@ export async function proxy(request: NextRequest) {
     vanity = Boolean(slug);
   }
 
-  if (slug && !url.pathname.startsWith("/api") && !url.pathname.startsWith("/s/") && !url.pathname.startsWith("/_next")) {
+  if (slug) {
     const dest = url.clone();
     dest.pathname = `/s/${slug}${url.pathname === "/" ? "" : url.pathname}`;
     headers.set("x-pathname", dest.pathname);
