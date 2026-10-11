@@ -1,0 +1,3 @@
+module.exports=[58423,a=>a.a(async(b,c)=>{try{a.i(70396);var d=a.i(73727),e=a.i(9307),f=a.i(54663),g=a.i(52579),h=b([e,g]);async function i({children:a,params:b}){let{slug:c}=await b,h=await (0,e.readSession)();h&&"staff"===h.kind||(0,d.redirect)(`/login?next=/s/${c}/manage`);let j=await (0,g.tenantBySlug)(c);return j&&h.tenantId===j.id||(0,d.redirect)("/login"),(0,f.subscriptionActive)(j.status,j.subscriptionEndsAt)||(0,d.redirect)(`/s/${c}/renew`),a}[e,g]=h.then?(await h)():h,a.s(["default",0,i,"dynamic",0,"force-dynamic"]),c()}catch(a){c(a)}},!1),8367,a=>{a.n(a.i(58423))}];
+
+//# sourceMappingURL=src_app_s_%5Bslug%5D_manage_layout_tsx_0h-62-m._.js.map

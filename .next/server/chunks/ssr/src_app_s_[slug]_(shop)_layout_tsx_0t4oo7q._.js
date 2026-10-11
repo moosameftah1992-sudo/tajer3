@@ -1,0 +1,3 @@
+module.exports=[27956,a=>a.a(async(b,c)=>{try{var d=a.i(5246);a.i(70396);var e=a.i(73727),f=a.i(54663),g=a.i(52579),h=b([g]);async function i({children:a,params:b}){let{slug:c}=await b,h=await (0,g.tenantBySlug)(c);if(h||(0,e.notFound)(),!(0,f.subscriptionActive)(h.status,h.subscriptionEndsAt)){let a=await (0,d.headers)(),b="1"===a.get("x-tajer-vanity");(0,e.redirect)(b?"/maintenance":`/s/${c}/maintenance`)}return a}[g]=h.then?(await h)():h,a.s(["default",0,i,"dynamic",0,"force-dynamic"]),c()}catch(a){c(a)}},!1),84667,a=>{a.n(a.i(27956))}];
+
+//# sourceMappingURL=src_app_s_%5Bslug%5D_%28shop%29_layout_tsx_0t4oo7q._.js.map

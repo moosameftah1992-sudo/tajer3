@@ -1,0 +1,3 @@
+module.exports=[33724,a=>{"use strict";var b=a.i(5246),c=a.i(54663);async function d(){let a=await (0,b.cookies)();return(0,c.pickLocale)(a.get("tajer_locale")?.value)}a.s(["getLocale",0,d])},27572,a=>{"use strict";var b=a.i(7997),c=a.i(33724);async function d({children:a}){let e=await (0,c.getLocale)();return(0,b.jsx)("html",{lang:e,dir:"ar"===e?"rtl":"ltr",children:(0,b.jsx)("body",{children:a})})}a.s(["default",0,d,"dynamic",0,"force-dynamic","metadata",0,{title:"Tajer | تاجر",description:"Multi-tenant commerce, POS, and subscriptions for GCC merchants.",icons:{icon:"/brand/mark.svg"}}])},50645,a=>{a.n(a.i(27572))}];
+
+//# sourceMappingURL=src_0ahyru_._.js.map

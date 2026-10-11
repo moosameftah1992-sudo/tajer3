@@ -1,0 +1,3 @@
+{
+  "/api/webhooks/logistics/[code]/route": "app/api/webhooks/logistics/[code]/route.js"
+}

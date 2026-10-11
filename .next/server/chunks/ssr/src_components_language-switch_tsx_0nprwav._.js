@@ -1,0 +1,3 @@
+module.exports=[57102,a=>{"use strict";var b=a.i(87924),c=a.i(50944);a.s(["LanguageSwitch",0,function({locale:a}){let d=(0,c.useRouter)();function e(a){document.cookie=`tajer_locale=${a};path=/;max-age=31536000;samesite=lax`,d.refresh()}return(0,b.jsxs)("div",{className:"lang-switch",role:"group","aria-label":"Language",children:[(0,b.jsx)("button",{type:"button",className:"en"===a?"on":"",onClick:()=>e("en"),children:"EN"}),(0,b.jsx)("button",{type:"button",className:"ar"===a?"on":"",onClick:()=>e("ar"),children:"ع"})]})}])}];
+
+//# sourceMappingURL=src_components_language-switch_tsx_0nprwav._.js.map
