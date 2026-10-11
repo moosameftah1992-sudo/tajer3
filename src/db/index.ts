@@ -16,8 +16,7 @@ export const pool =
   new Pool({
     connectionString: databaseUrl,
     ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 10000, // 10 ثوانٍ مهلة قصوى لمنع التعليق
-    max: 5,
+    connectionTimeoutMillis: 10000, // مهلة 10 ثوانٍ لمنع تعليق الخادم
   });
 
 if (process.env.NODE_ENV !== "production") {
