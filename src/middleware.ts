@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { pool } from "@/db";
 
-const RESERVED = new Set(["www", "admin", "platform", "api", "app", "static", "mail", "s", "assets"]);
 const cache = new Map<string, { slug: string | null; exp: number }>();
 
 function hostname(request: NextRequest) {
@@ -10,16 +9,13 @@ function hostname(request: NextRequest) {
 }
 
 function isPlatformHost(host: string) {
-  if (
+  return (
     host.endsWith(".vercel.app") ||
     host.endsWith(".localhost") ||
     host === "localhost" ||
     host === "127.0.0.1" ||
     host.includes("tajer.com")
-  ) {
-    return true;
-  }
-  return false;
+  );
 }
 
 async function lookupHost(host: string) {
@@ -38,7 +34,7 @@ async function lookupHost(host: string) {
   }
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const host = hostname(request);
 
@@ -58,13 +54,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
-     */
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
